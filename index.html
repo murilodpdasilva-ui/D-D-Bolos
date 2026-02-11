@@ -7,119 +7,43 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
+
+<!-- TELA DE LOGIN -->
+<div id="loginScreen" class="tela-login">
+  <h1>🍰 D&D Bolos e Delícias</h1>
+  <input type="text" id="loginNome" placeholder="Nome">
+  <input type="password" id="loginSenha" placeholder="Senha">
+  <button onclick="logar()">Entrar</button>
+</div>
+
+<!-- TELA PRINCIPAL -->
+<div id="mainScreen" style="display:none;">
   <header>
     <h1>🍰 D&D Bolos e Delícias</h1>
+    <div id="menu">
+      <button onclick="mostrarCardapio()">Cardápio</button>
+      <button onclick="mostrarCarrinho()">Carrinho 🛒</button>
+      <button id="botaoEstoque" style="display:none;" onclick="window.location='admin.html'">Estoque</button>
+    </div>
   </header>
-
-  <nav id="menu">
-    <button onclick="mostrarCardapio()">Cardápio</button>
-    <button onclick="mostrarCarrinho()">Carrinho 🛒</button>
-    <button id="botaoEstoque" style="display:none;" onclick="window.location='admin.html'">Estoque</button>
-  </nav>
 
   <div id="welcome">
     <h2>Bem-vindo(a), <span id="nomeUser"></span>!</h2>
-    <p>Confira nossos deliciosos bolos e doces 🍰</p>
   </div>
 
-  <div id="cardapio" style="display:flex; flex-wrap:wrap;"></div>
-  <div id="carrinho" style="display:none;"></div>
-  <button onclick="finalizarCompra()" id="btnFinalizar" style="display:none;">Finalizar Pedido</button>
+  <!-- CARDÁPIO COM CATEGORIAS -->
+  <div id="categorias"></div>
+  <div id="cardapio" class="grid"></div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  <!-- CARRINHO -->
+  <div id="carrinho" style="display:none;">
+    <h2>Seu Carrinho</h2>
+    <div id="itens-carrinho"></div>
+    <p>Total: R$ <span id="total">0.00</span></p>
+    <button onclick="finalizarCompra()">Finalizar Pedido</button>
+  </div>
+</div>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCzbARMpHLybFuU-1xFqH0QIc-MuoeRIRE",
-  authDomain: "dd-bolos.firebaseapp.com",
-  projectId: "dd-bolos",
-  storageBucket: "dd-bolos.firebasestorage.app",
-  messagingSenderId: "887742402793",
-  appId: "1:887742402793:web:e13d26f8e9ca28a94f2078"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-const cardapioDiv = document.getElementById("cardapio");
-const carrinhoDiv = document.getElementById("carrinho");
-const btnFinalizar = document.getElementById("btnFinalizar");
-
-let produtos = [];
-let carrinho = [];
-
-const tipoUsuario = sessionStorage.getItem("tipo");
-if(tipoUsuario==="admin") document.getElementById("botaoEstoque").style.display="inline-block";
-
-const nomeUser = tipoUsuario==="cliente"?sessionStorage.getItem("nome"):"Administrador D&D";
-document.getElementById("nomeUser").textContent=nomeUser;
-
-function mostrarCardapio(){ cardapioDiv.style.display="flex"; carrinhoDiv.style.display="none"; btnFinalizar.style.display="none"; }
-function mostrarCarrinho(){ cardapioDiv.style.display="none"; carrinhoDiv.style.display="block"; btnFinalizar.style.display="block"; }
-
-async function carregarProdutos(){
-  const querySnapshot = await getDocs(collection(db,"produtos"));
-  produtos = [];
-  cardapioDiv.innerHTML="";
-  querySnapshot.forEach(docSnap=>{
-    const produto = docSnap.data(); produto.id=docSnap.id; produtos.push(produto);
-    cardapioDiv.innerHTML += `<div class="produto">
-      <h3>${produto.nome}</h3>
-      <p>${produto.descricao||""}</p>
-      <p><strong>R$ ${Number(produto.preco).toFixed(2)}</strong></p>
-      <p>Estoque: ${produto.quantidade}</p>
-      <button onclick="adicionarCarrinho('${produto.id}')">Adicionar</button>
-    </div>`;
-  });
-}
-
-window.adicionarCarrinho = function(id){
-  const produto = produtos.find(p=>p.id===id); 
-  if(!produto||produto.quantidade<=0){alert("Produto sem estoque!"); return;}
-  const item=carrinho.find(p=>p.id===id);
-  if(item){ if(item.quantidade<produto.quantidade) item.quantidade++; else {alert("Quantidade máxima atingida!"); return;} } 
-  else {carrinho.push({...produto, quantidade:1});}
-  atualizarCarrinho(); mostrarCarrinho();
-}
-
-function atualizarCarrinho(){
-  carrinhoDiv.innerHTML="";
-  carrinho.forEach(item=>{
-    carrinhoDiv.innerHTML+=`<div class="produto-carrinho">
-      <p>${item.nome} - ${item.quantidade}x</p>
-      <button onclick="alterarQtd('${item.id}',-1)">-</button>
-      <button onclick="alterarQtd('${item.id}',1)">+</button>
-    </div>`;
-  });
-}
-
-window.alterarQtd=function(id,delta){
-  const item=carrinho.find(p=>p.id===id); if(!item) return; item.quantidade+=delta;
-  if(item.quantidade<=0) carrinho=carrinho.filter(p=>p.id!==id); atualizarCarrinho();
-}
-
-window.finalizarCompra = async function(){
-  if(carrinho.length===0){alert("Carrinho vazio!"); return;}
-  const nomeCliente = tipoUsuario==="cliente"?sessionStorage.getItem("nome"):"Administrador D&D";
-  const enderecoCliente = tipoUsuario==="cliente"?sessionStorage.getItem("endereco"):"Loja D&D";
-  let mensagem=`Olá! Meu nome é ${nomeCliente}, endereço: ${enderecoCliente}\nPedido:\n\n`;
-
-  for(const item of carrinho){
-    const produtoRef = doc(db,"produtos",item.id);
-    const produtoOriginal = produtos.find(p=>p.id===item.id);
-    const novoEstoque = produtoOriginal.quantidade - item.quantidade;
-    await updateDoc(produtoRef,{quantidade:novoEstoque});
-    mensagem+=`${item.nome} - ${item.quantidade}x\n`;
-  }
-
-  mensagem+=`\nTotal: R$ ${carrinho.reduce((t,i)=>t+i.preco*i.quantidade,0).toFixed(2)}`;
-  window.open(`https://wa.me/5521976152436?text=${encodeURIComponent(mensagem)}`,"_blank");
-
-  carrinho=[]; atualizarCarrinho(); carregarProdutos();
-}
-
-carregarProdutos(); mostrarCardapio();
-</script>
+<script type="module" src="cardapio.js"></script>
 </body>
 </html>
