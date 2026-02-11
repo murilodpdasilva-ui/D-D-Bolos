@@ -9,7 +9,6 @@
 
   <h1>Administração do Estoque</h1>
 
-  <!-- Formulário de produtos -->
   <input type="text" id="nome" placeholder="Nome do produto">
   <input type="text" id="descricao" placeholder="Descrição do produto">
   <input type="number" id="preco" placeholder="Preço">
@@ -23,6 +22,85 @@
 
   <div id="lista-admin"></div>
 
-  <script src="admin.js"></script>
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCzbARMpHLybFuU-1xFqH0QIc-MuoeRIRE",
+  authDomain: "dd-bolos.firebaseapp.com",
+  projectId: "dd-bolos",
+  storageBucket: "dd-bolos.firebasestorage.app",
+  messagingSenderId: "887742402793",
+  appId: "1:887742402793:web:e13d26f8e9ca28a94f2078"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// -------- ADICIONAR PRODUTO --------
+window.adicionarProduto = async function() {
+  const nome = document.getElementById("nome").value;
+  const descricao = document.getElementById("descricao").value;
+  const preco = parseFloat(document.getElementById("preco").value);
+  const quantidade = parseInt(document.getElementById("quantidade").value);
+
+  if (!nome || !descricao || isNaN(preco) || isNaN(quantidade)) {
+    alert("Preencha todos os campos corretamente!");
+    return;
+  }
+
+  await addDoc(collection(db, "produtos"), {
+    nome: nome,
+    descricao: descricao,
+    preco: preco,
+    quantidade: quantidade
+  });
+
+  alert("Produto adicionado com sucesso!");
+
+  document.getElementById("nome").value = "";
+  document.getElementById("descricao").value = "";
+  document.getElementById("preco").value = "";
+  document.getElementById("quantidade").value = "";
+
+  carregarProdutosAdmin();
+}
+
+// -------- LISTAR PRODUTOS --------
+async function carregarProdutosAdmin() {
+  const lista = document.getElementById("lista-admin");
+  lista.innerHTML = "";
+
+  const querySnapshot = await getDocs(collection(db, "produtos"));
+
+  querySnapshot.forEach((docSnap) => {
+    const produto = docSnap.data();
+    const id = docSnap.id;
+
+    const div = document.createElement("div");
+    div.className = "produto";
+    div.innerHTML = `
+      <strong>${produto.nome}</strong><br>
+      ${produto.descricao}<br>
+      R$ ${produto.preco}<br>
+      Estoque: ${produto.quantidade}<br>
+      <button onclick="removerProduto('${id}')">Remover</button>
+    `;
+    lista.appendChild(div);
+  });
+}
+
+// -------- REMOVER PRODUTO --------
+window.removerProduto = async function(id) {
+  await deleteDoc(doc(db, "produtos", id));
+  carregarProdutosAdmin();
+}
+
+carregarProdutosAdmin();
+
+</script>
+
 </body>
 </html>
