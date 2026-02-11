@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Administração do Estoque</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1>Administração do Estoque</h1>
+
+  <!-- Formulário de produtos -->
+  <input type="text" id="nome" placeholder="Nome do produto">
+  <input type="text" id="descricao" placeholder="Descrição do produto">
+  <input type="number" id="preco" placeholder="Preço">
+  <input type="number" id="quantidade" placeholder="Quantidade disponível">
+
+  <br><br>
+
+  <button onclick="adicionarProduto()">Adicionar produto</button>
+
+  <hr>
+
+  <div id="lista-admin"></div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
