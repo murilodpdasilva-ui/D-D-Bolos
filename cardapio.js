@@ -118,7 +118,7 @@ function enviarPedido() {
   mensagem += `\nEntrega: ${tipoEntrega}`;
 
   const mensagemURL = encodeURIComponent(mensagem);
-  const numeroWhatsApp = "5511999999999"; // coloque seu número real
+  const numeroWhatsApp = "5521976152436"; // coloque seu número real
   window.open(`https://wa.me/${numeroWhatsApp}?text=${mensagemURL}`, "_blank");
 
   carrinho = [];
