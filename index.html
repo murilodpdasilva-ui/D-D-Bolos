@@ -6,130 +6,155 @@
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Poppins', sans-serif; background-color:#FFF8F0; text-align:center; color:#5D4037; padding:20px;}
-    h1,h2 { color:#8D6E63; font-weight:600;}
-    .produto { border:1px solid #ccc; padding:15px; margin:10px; border-radius:10px; display:inline-block; text-align:left; width:250px; vertical-align:top;}
-    .produto button { margin-top:5px; padding:5px 10px; border:none; border-radius:5px; cursor:pointer; background-color:#F3E2B3;}
-    .produto button:hover { background-color:#E6D1A3;}
-    #carrinho { margin-top:20px; text-align:left; max-width:400px; margin-left:auto; margin-right:auto;}
-    #carrinho button { width:100%; margin-top:10px; background-color:#F3E2B3; padding:10px; border-radius:8px;}
+    #welcome {
+      background:#F3E2B3;
+      padding:20px;
+      border-radius:15px;
+      margin-bottom:20px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.2);
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {opacity:0;}
+      to {opacity:1;}
+    }
   </style>
 </head>
 <body>
 
   <h1>🍰 D&D Bolos e Delícias</h1>
 
-  <h2>Cardápio</h2>
-  <div id="lista-produtos"></div>
+  <div id="menu">
+    <button onclick="mostrarCardapio()">Cardápio</button>
+    <button onclick="mostrarCarrinho()">Carrinho 🛒</button>
+    <button id="botaoEstoque" style="display:none;" onclick="window.location='admin.html'">Estoque</button>
+  </div>
 
-  <h2>🛒 Carrinho</h2>
-  <div id="carrinho"></div>
-  <button onclick="finalizarCompra()">Finalizar Pedido</button>
+  <div id="welcome">
+    <h2>Bem-vindo(a), <span id="nomeUser"></span>!</h2>
+    <p>Confira nossos deliciosos bolos e doces 🍰</p>
+  </div>
+
+  <div id="cardapio"></div>
+  <div id="carrinho" style="display:none;"></div>
+  <button onclick="finalizarCompra()" id="btnFinalizar" style="display:none;">Finalizar Pedido</button>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCzbARMpHLybFuU-1xFqH0QIc-MuoeRIRE",
-    authDomain: "dd-bolos.firebaseapp.com",
-    projectId: "dd-bolos",
-    storageBucket: "dd-bolos.firebasestorage.app",
-    messagingSenderId: "887742402793",
-    appId: "1:887742402793:web:e13d26f8e9ca28a94f2078"
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyCzbARMpHLybFuU-1xFqH0QIc-MuoeRIRE",
+  authDomain: "dd-bolos.firebaseapp.com",
+  projectId: "dd-bolos",
+  storageBucket: "dd-bolos.firebasestorage.app",
+  messagingSenderId: "887742402793",
+  appId: "1:887742402793:web:e13d26f8e9ca28a94f2078"
+};
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-  const lista = document.getElementById("lista-produtos");
-  const carrinhoDiv = document.getElementById("carrinho");
+const cardapioDiv = document.getElementById("cardapio");
+const carrinhoDiv = document.getElementById("carrinho");
+const btnFinalizar = document.getElementById("btnFinalizar");
 
-  let produtos = [];
-  let carrinho = [];
+let produtos = [];
+let carrinho = [];
 
-  async function carregarProdutos() {
-    const querySnapshot = await getDocs(collection(db, "produtos"));
-    produtos = [];
-    lista.innerHTML = "";
+const tipoUsuario = sessionStorage.getItem("tipo");
 
-    querySnapshot.forEach((docSnap) => {
-      const produto = docSnap.data();
-      produto.id = docSnap.id;
-      produtos.push(produto);
+if (tipoUsuario === "admin") {
+  document.getElementById("botaoEstoque").style.display = "inline-block";
+}
 
-      lista.innerHTML += `
-        <div class="produto">
-          <h3>${produto.nome}</h3>
-          <p>${produto.descricao || ""}</p>
-          <p><strong>R$ ${Number(produto.preco).toFixed(2)}</strong></p>
-          <p>Estoque: ${produto.quantidade}</p>
-          <button onclick="adicionarCarrinho('${produto.id}')">Adicionar</button>
-        </div>
-      `;
-    });
+const nomeUser = tipoUsuario === "cliente" ? sessionStorage.getItem("nome") : "Administrador D&D";
+document.getElementById("nomeUser").textContent = nomeUser;
+
+function mostrarCardapio() {
+  cardapioDiv.style.display = "block";
+  carrinhoDiv.style.display = "none";
+  btnFinalizar.style.display = "none";
+}
+
+function mostrarCarrinho() {
+  cardapioDiv.style.display = "none";
+  carrinhoDiv.style.display = "block";
+  btnFinalizar.style.display = "block";
+}
+
+async function carregarProdutos() {
+  const querySnapshot = await getDocs(collection(db, "produtos"));
+  produtos = [];
+  cardapioDiv.innerHTML = "";
+
+  querySnapshot.forEach((docSnap) => {
+    const produto = docSnap.data();
+    produto.id = docSnap.id;
+    produtos.push(produto);
+
+    cardapioDiv.innerHTML += `
+      <div class="produto">
+        <h3>${produto.nome}</h3>
+        <p>${produto.descricao || ""}</p>
+        <p><strong>R$ ${Number(produto.preco).toFixed(2)}</strong></p>
+        <p>Estoque: ${produto.quantidade}</p>
+        <button onclick="adicionarCarrinho('${produto.id}')">Adicionar</button>
+      </div>
+    `;
+  });
+}
+
+window.adicionarCarrinho = function(id) {
+  const produto = produtos.find(p => p.id === id);
+  if (!produto || produto.quantidade <= 0) { alert("Produto sem estoque!"); return; }
+
+  const item = carrinho.find(p => p.id === id);
+  if (item) {
+    if (item.quantidade < produto.quantidade) item.quantidade++;
+    else { alert("Quantidade máxima atingida!"); return; }
+  } else {
+    carrinho.push({ ...produto, quantidade: 1 });
+  }
+  atualizarCarrinho();
+};
+
+function atualizarCarrinho() {
+  carrinhoDiv.innerHTML = "";
+  carrinho.forEach(item => {
+    carrinhoDiv.innerHTML += `<p>${item.nome} - ${item.quantidade}x</p>`;
+  });
+}
+
+window.finalizarCompra = async function() {
+  if (carrinho.length === 0) { alert("Carrinho vazio!"); return; }
+
+  const nomeCliente = tipoUsuario === "cliente" ? sessionStorage.getItem("nome") : "Administrador D&D";
+  const enderecoCliente = tipoUsuario === "cliente" ? sessionStorage.getItem("endereco") : "Loja D&D";
+
+  let mensagem = `Olá! Meu nome é ${nomeCliente}, endereço: ${enderecoCliente}\nPedido:\n\n`;
+
+  for (const item of carrinho) {
+    const produtoRef = doc(db, "produtos", item.id);
+    const produtoOriginal = produtos.find(p => p.id === item.id);
+    const novoEstoque = produtoOriginal.quantidade - item.quantidade;
+
+    await updateDoc(produtoRef, { quantidade: novoEstoque });
+
+    mensagem += `${item.nome} - ${item.quantidade}x\n`;
   }
 
-  window.adicionarCarrinho = function(id) {
-    const produto = produtos.find(p => p.id === id);
+  mensagem += `\nTotal: R$ ${carrinho.reduce((t,i)=>t+i.preco*i.quantidade,0).toFixed(2)}`;
+  window.open(`https://wa.me/5521976152436?text=${encodeURIComponent(mensagem)}`, "_blank");
 
-    if (!produto || produto.quantidade <= 0) {
-      alert("Produto sem estoque!");
-      return;
-    }
-
-    const item = carrinho.find(p => p.id === id);
-
-    if (item) {
-      if (item.quantidade < produto.quantidade) {
-        item.quantidade++;
-      } else {
-        alert("Quantidade máxima atingida!");
-        return;
-      }
-    } else {
-      carrinho.push({ ...produto, quantidade: 1 });
-    }
-
-    atualizarCarrinho();
-  };
-
-  function atualizarCarrinho() {
-    carrinhoDiv.innerHTML = "";
-    carrinho.forEach(item => {
-      carrinhoDiv.innerHTML += `<p>${item.nome} - ${item.quantidade}x</p>`;
-    });
-  }
-
-  window.finalizarCompra = async function() {
-    if (carrinho.length === 0) {
-      alert("Carrinho vazio!");
-      return;
-    }
-
-    let mensagem = "Olá! Gostaria de fazer um pedido:%0A%0A";
-
-    for (const item of carrinho) {
-      const produtoRef = doc(db, "produtos", item.id);
-      const produtoOriginal = produtos.find(p => p.id === item.id);
-      const novoEstoque = produtoOriginal.quantidade - item.quantidade;
-
-      await updateDoc(produtoRef, { quantidade: novoEstoque });
-
-      mensagem += `${item.nome} - ${item.quantidade}x%0A`;
-    }
-
-    mensagem += `%0ATotal: R$ ${carrinho.reduce((t,i)=>t+i.preco*i.quantidade,0).toFixed(2)}`;
-
-    // Coloque seu número no formato 5521XXXXXXXX
-    window.open(`https://wa.me/5521976152436?text=${mensagem}`, "_blank");
-
-    carrinho = [];
-    atualizarCarrinho();
-    carregarProdutos();
-  };
-
+  carrinho = [];
+  atualizarCarrinho();
   carregarProdutos();
+};
+
+carregarProdutos();
+mostrarCardapio();
 </script>
 
 </body>

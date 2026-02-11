@@ -13,17 +13,12 @@
   <input type="text" id="descricao" placeholder="Descrição do produto">
   <input type="number" id="preco" placeholder="Preço">
   <input type="number" id="quantidade" placeholder="Quantidade disponível">
-
   <br><br>
-
   <button onclick="adicionarProduto()">Adicionar produto</button>
-
   <hr>
-
   <div id="lista-admin"></div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -39,7 +34,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// -------- ADICIONAR PRODUTO --------
 window.adicionarProduto = async function() {
   const nome = document.getElementById("nome").value;
   const descricao = document.getElementById("descricao").value;
@@ -51,15 +45,7 @@ window.adicionarProduto = async function() {
     return;
   }
 
-  await addDoc(collection(db, "produtos"), {
-    nome: nome,
-    descricao: descricao,
-    preco: preco,
-    quantidade: quantidade
-  });
-
-  alert("Produto adicionado com sucesso!");
-
+  await addDoc(collection(db, "produtos"), { nome, descricao, preco, quantidade });
   document.getElementById("nome").value = "";
   document.getElementById("descricao").value = "";
   document.getElementById("preco").value = "";
@@ -68,13 +54,11 @@ window.adicionarProduto = async function() {
   carregarProdutosAdmin();
 }
 
-// -------- LISTAR PRODUTOS --------
 async function carregarProdutosAdmin() {
   const lista = document.getElementById("lista-admin");
   lista.innerHTML = "";
 
   const querySnapshot = await getDocs(collection(db, "produtos"));
-
   querySnapshot.forEach((docSnap) => {
     const produto = docSnap.data();
     const id = docSnap.id;
@@ -92,14 +76,12 @@ async function carregarProdutosAdmin() {
   });
 }
 
-// -------- REMOVER PRODUTO --------
 window.removerProduto = async function(id) {
   await deleteDoc(doc(db, "produtos", id));
   carregarProdutosAdmin();
 }
 
 carregarProdutosAdmin();
-
 </script>
 
 </body>
