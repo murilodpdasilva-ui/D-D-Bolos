@@ -11,18 +11,18 @@
     <h1>🍰 D&D Bolos e Delícias</h1>
   </header>
 
-  <div id="menu">
+  <nav id="menu">
     <button onclick="mostrarCardapio()">Cardápio</button>
     <button onclick="mostrarCarrinho()">Carrinho 🛒</button>
     <button id="botaoEstoque" style="display:none;" onclick="window.location='admin.html'">Estoque</button>
-  </div>
+  </nav>
 
   <div id="welcome">
     <h2>Bem-vindo(a), <span id="nomeUser"></span>!</h2>
     <p>Confira nossos deliciosos bolos e doces 🍰</p>
   </div>
 
-  <div id="cardapio"></div>
+  <div id="cardapio" style="display:flex; flex-wrap:wrap;"></div>
   <div id="carrinho" style="display:none;"></div>
   <button onclick="finalizarCompra()" id="btnFinalizar" style="display:none;">Finalizar Pedido</button>
 
@@ -38,6 +38,7 @@ const firebaseConfig = {
   messagingSenderId: "887742402793",
   appId: "1:887742402793:web:e13d26f8e9ca28a94f2078"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -49,18 +50,19 @@ let produtos = [];
 let carrinho = [];
 
 const tipoUsuario = sessionStorage.getItem("tipo");
-if (tipoUsuario === "admin") document.getElementById("botaoEstoque").style.display = "inline-block";
+if(tipoUsuario==="admin") document.getElementById("botaoEstoque").style.display="inline-block";
 
-const nomeUser = tipoUsuario === "cliente" ? sessionStorage.getItem("nome") : "Administrador D&D";
-document.getElementById("nomeUser").textContent = nomeUser;
+const nomeUser = tipoUsuario==="cliente"?sessionStorage.getItem("nome"):"Administrador D&D";
+document.getElementById("nomeUser").textContent=nomeUser;
 
-function mostrarCardapio() { cardapioDiv.style.display="flex"; carrinhoDiv.style.display="none"; btnFinalizar.style.display="none"; }
-function mostrarCarrinho() { cardapioDiv.style.display="none"; carrinhoDiv.style.display="block"; btnFinalizar.style.display="block"; }
+function mostrarCardapio(){ cardapioDiv.style.display="flex"; carrinhoDiv.style.display="none"; btnFinalizar.style.display="none"; }
+function mostrarCarrinho(){ cardapioDiv.style.display="none"; carrinhoDiv.style.display="block"; btnFinalizar.style.display="block"; }
 
-async function carregarProdutos() {
-  const querySnapshot = await getDocs(collection(db, "produtos"));
-  produtos=[]; cardapioDiv.innerHTML="";
-  querySnapshot.forEach(docSnap => {
+async function carregarProdutos(){
+  const querySnapshot = await getDocs(collection(db,"produtos"));
+  produtos = [];
+  cardapioDiv.innerHTML="";
+  querySnapshot.forEach(docSnap=>{
     const produto = docSnap.data(); produto.id=docSnap.id; produtos.push(produto);
     cardapioDiv.innerHTML += `<div class="produto">
       <h3>${produto.nome}</h3>
@@ -72,19 +74,23 @@ async function carregarProdutos() {
   });
 }
 
-window.adicionarCarrinho = function(id) {
-  const produto = produtos.find(p=>p.id===id); if(!produto||produto.quantidade<=0){alert("Produto sem estoque!");return;}
+window.adicionarCarrinho = function(id){
+  const produto = produtos.find(p=>p.id===id); 
+  if(!produto||produto.quantidade<=0){alert("Produto sem estoque!"); return;}
   const item=carrinho.find(p=>p.id===id);
   if(item){ if(item.quantidade<produto.quantidade) item.quantidade++; else {alert("Quantidade máxima atingida!"); return;} } 
   else {carrinho.push({...produto, quantidade:1});}
-  atualizarCarrinho();
+  atualizarCarrinho(); mostrarCarrinho();
 }
 
-function atualizarCarrinho() {
+function atualizarCarrinho(){
   carrinhoDiv.innerHTML="";
   carrinho.forEach(item=>{
-    carrinhoDiv.innerHTML+=`<div class="produto-carrinho"><p>${item.nome} - ${item.quantidade}x</p>
-    <button onclick="alterarQtd('${item.id}',-1)">-</button><button onclick="alterarQtd('${item.id}',1)">+</button></div>`;
+    carrinhoDiv.innerHTML+=`<div class="produto-carrinho">
+      <p>${item.nome} - ${item.quantidade}x</p>
+      <button onclick="alterarQtd('${item.id}',-1)">-</button>
+      <button onclick="alterarQtd('${item.id}',1)">+</button>
+    </div>`;
   });
 }
 
@@ -95,18 +101,21 @@ window.alterarQtd=function(id,delta){
 
 window.finalizarCompra = async function(){
   if(carrinho.length===0){alert("Carrinho vazio!"); return;}
-  const nomeCliente=tipoUsuario==="cliente"?sessionStorage.getItem("nome"):"Administrador D&D";
-  const enderecoCliente=tipoUsuario==="cliente"?sessionStorage.getItem("endereco"):"Loja D&D";
+  const nomeCliente = tipoUsuario==="cliente"?sessionStorage.getItem("nome"):"Administrador D&D";
+  const enderecoCliente = tipoUsuario==="cliente"?sessionStorage.getItem("endereco"):"Loja D&D";
   let mensagem=`Olá! Meu nome é ${nomeCliente}, endereço: ${enderecoCliente}\nPedido:\n\n`;
+
   for(const item of carrinho){
-    const produtoRef=doc(db,"produtos",item.id);
-    const produtoOriginal=produtos.find(p=>p.id===item.id);
-    const novoEstoque=produtoOriginal.quantidade-item.quantidade;
+    const produtoRef = doc(db,"produtos",item.id);
+    const produtoOriginal = produtos.find(p=>p.id===item.id);
+    const novoEstoque = produtoOriginal.quantidade - item.quantidade;
     await updateDoc(produtoRef,{quantidade:novoEstoque});
     mensagem+=`${item.nome} - ${item.quantidade}x\n`;
   }
+
   mensagem+=`\nTotal: R$ ${carrinho.reduce((t,i)=>t+i.preco*i.quantidade,0).toFixed(2)}`;
   window.open(`https://wa.me/5521976152436?text=${encodeURIComponent(mensagem)}`,"_blank");
+
   carrinho=[]; atualizarCarrinho(); carregarProdutos();
 }
 
