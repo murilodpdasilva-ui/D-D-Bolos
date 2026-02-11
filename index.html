@@ -2,15 +2,41 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Meu Cardápio</title>
+  <title>D&D Bolos e Delícias</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <h1>Meu primeiro site 😄</h1>
-  <p>Esse é meu cardápio online.</p>
-<a href="cardapio.html">
-  <button>Ver Cardápio</button>
-</a>
+  <header>
+    <h1>D&D Bolos e Delícias 🍰</h1>
+    <nav>
+      <button onclick="mostrarAba('cardapio')">Cardápio</button>
+      <button onclick="mostrarAba('carrinho')">Carrinho</button>
+      <button onclick="mostrarAba('historico')">Histórico</button>
+    </nav>
+  </header>
+
+  <!-- CARDÁPIO -->
+  <section id="cardapio" class="aba ativa">
+    <h2>Cardápio</h2>
+    <div id="lista-produtos"></div>
+  </section>
+
+  <!-- CARRINHO -->
+  <section id="carrinho" class="aba">
+    <h2>Seu Carrinho</h2>
+    <div id="itens-carrinho"></div>
+    <p class="total">Total: R$ <span id="total">0</span></p>
+    <button class="botao-principal" onclick="finalizarCompra()">Finalizar Pedido</button>
+  </section>
+
+  <!-- HISTÓRICO -->
+  <section id="historico" class="aba">
+    <h2>Histórico de Pedidos</h2>
+    <div id="lista-historico"></div>
+  </section>
+
+  <script src="cardapio.js"></script>
 </body>
 </html>

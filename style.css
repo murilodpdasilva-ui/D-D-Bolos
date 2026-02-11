@@ -1,159 +1,80 @@
-/* Fonte moderna */
 body {
   font-family: 'Poppins', sans-serif;
-  background-color: #FFF8F0; /* off-white */
-  text-align: center;
-  padding: 40px;
-  color: #5D4037; /* marrom escuro */
+  margin: 0;
+  background-color: #FFF8F0;
+  color: #5D4037;
 }
 
-h1, h2 {
-  color: #8D6E63; /* marrom médio */
-  font-weight: 600;
-  margin-bottom: 20px;
-}
-
-/* Cards de produtos */
-.produto {
-  background-color: #F5D0C5; /* rosê claro */
+header {
+  background-color: #F5D0C5;
   padding: 20px;
-  margin: 20px auto;
+  text-align: center;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+nav button {
+  margin: 5px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background-color: #F3E2B3;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+nav button:hover {
+  background-color: #E6D1A3;
+}
+
+.aba {
+  display: none;
+  padding: 20px;
+  text-align: center;
+}
+
+.aba.ativa {
+  display: block;
+}
+
+.produto {
+  background-color: #F5D0C5;
+  padding: 20px;
+  margin: 15px auto;
   max-width: 300px;
   border-radius: 15px;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   text-align: left;
 }
 
-.produto strong {
-  color: #5D4037;
-  font-size: 18px;
-}
-
-.produto small {
-  color: #8D6E63;
-}
-
 .produto button {
-  margin: 5px 5px 0 0;
+  margin-top: 10px;
   padding: 8px 15px;
-  font-size: 14px;
-  background-color: #F3E2B3; /* dourado claro */
-  color: #5D4037;
+  background-color: #F3E2B3;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  transition: 0.3s;
 }
 
 .produto button:hover {
   background-color: #E6D1A3;
 }
 
-/* Carrinho lateral fixo */
-.carrinho-lateral {
-  position: fixed;
-  right: 20px;
-  top: 80px;
-  width: 300px;
-  background-color: #F5D0C5;
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  max-height: 80vh;
-  overflow-y: auto;
-  display: none;
-}
-
-.carrinho-lateral h2 {
-  margin-top: 0;
-}
-
-.carrinho-lateral button {
-  background-color: #F3E2B3;
-  color: #5D4037;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
-  cursor: pointer;
-  width: 100%;
-  margin-top: 10px;
-}
-
-.carrinho-lateral button:hover {
-  background-color: #E6D1A3;
-}
-
-/* Botões de quantidade no carrinho */
-.botoes-quantidade {
-  margin-top: 5px;
-}
-
-.botoes-quantidade button {
-  width: 35px;
-  height: 35px;
-  padding: 0;
-  margin-right: 5px;
+.total {
   font-size: 18px;
-  font-weight: bold;
-  border-radius: 50%;
-}
-
-/* Modal de Checkout */
-.checkout-modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: #FFF8F0;
-  border-radius: 15px;
-  padding: 30px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  max-width: 350px;
-  width: 90%;
-  display: none;
-  z-index: 1000;
-}
-
-.checkout-modal h2 {
-  margin-top: 0;
-  color: #8D6E63;
-}
-
-.checkout-modal .campo {
-  margin-bottom: 15px;
-  text-align: left;
-}
-
-.checkout-modal label {
-  display: block;
-  margin-bottom: 5px;
   font-weight: 600;
-  color: #5D4037;
 }
 
-.checkout-modal select {
-  width: 100%;
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-}
-
-.checkout-modal button {
+.botao-principal {
+  padding: 12px 20px;
   background-color: #F3E2B3;
-  color: #5D4037;
   border: none;
-  padding: 10px 20px;
   border-radius: 8px;
   cursor: pointer;
+  font-weight: 600;
   margin-top: 10px;
-  width: 48%;
-  margin-right: 4%;
 }
 
-.checkout-modal button:last-child {
-  margin-right: 0;
-}
-
-.checkout-modal button:hover {
+.botao-principal:hover {
   background-color: #E6D1A3;
 }
