@@ -8,35 +8,172 @@
 </head>
 <body>
 
-  <header>
-    <h1>D&D Bolos e Delícias 🍰</h1>
-    <nav>
-      <button onclick="mostrarAba('cardapio')">Cardápio</button>
-      <button onclick="mostrarAba('carrinho')">Carrinho</button>
-      <button onclick="mostrarAba('historico')">Histórico</button>
-    </nav>
-  </header>
+<header>
+  <h1>D&D Bolos e Delícias 🍰</h1>
+  <nav>
+    <button onclick="mostrarAba('cardapio')">Cardápio</button>
+    <button onclick="mostrarAba('carrinho')">Carrinho</button>
+  </nav>
+</header>
 
-  <!-- CARDÁPIO -->
-  <section id="cardapio" class="aba ativa">
-    <h2>Cardápio</h2>
-    <div id="lista-produtos"></div>
-  </section>
+<section id="cardapio" class="aba ativa">
+  <h2>Cardápio</h2>
+  <div id="lista-produtos"></div>
+</section>
 
-  <!-- CARRINHO -->
-  <section id="carrinho" class="aba">
-    <h2>Seu Carrinho</h2>
-    <div id="itens-carrinho"></div>
-    <p class="total">Total: R$ <span id="total">0</span></p>
-    <button class="botao-principal" onclick="finalizarCompra()">Finalizar Pedido</button>
-  </section>
+<section id="carrinho" class="aba">
+  <h2>Seu Carrinho</h2>
+  <div id="itens-carrinho"></div>
+  <p>Total: R$ <span id="total">0</span></p>
+  <button onclick="finalizarCompra()">Finalizar Pedido</button>
+</section>
 
-  <!-- HISTÓRICO -->
-  <section id="historico" class="aba">
-    <h2>Histórico de Pedidos</h2>
-    <div id="lista-historico"></div>
-  </section>
+<script type="module">
 
-  <script src="cardapio.js"></script>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, updateDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCzbARMpHLybFuU-1xFqH0QIc-MuoeRIRE",
+  authDomain: "dd-bolos.firebaseapp.com",
+  projectId: "dd-bolos",
+  storageBucket: "dd-bolos.firebasestorage.app",
+  messagingSenderId: "887742402793",
+  appId: "1:887742402793:web:e13d26f8e9ca28a94f2078"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let produtos = [];
+let carrinho = [];
+
+// -------- TROCAR ABAS --------
+window.mostrarAba = function(id) {
+  document.querySelectorAll(".aba").forEach(secao => {
+    secao.classList.remove("ativa");
+  });
+  document.getElementById(id).classList.add("ativa");
+}
+
+// -------- CARREGAR PRODUTOS DO FIREBASE --------
+async function carregarProdutos() {
+  const querySnapshot = await getDocs(collection(db, "produtos"));
+  produtos = [];
+
+  const lista = document.getElementById("lista-produtos");
+  lista.innerHTML = "";
+
+  querySnapshot.forEach((docSnap) => {
+    const produto = docSnap.data();
+    produto.id = docSnap.id;
+    produtos.push(produto);
+
+    const div = document.createElement("div");
+    div.className = "produto";
+    div.innerHTML = `
+      <strong>${produto.nome}</strong><br>
+      ${produto.descricao}<br>
+      R$ ${parseFloat(produto.preco).toFixed(2)}<br>
+      Estoque: ${produto.quantidade}<br>
+      <button onclick="adicionarAoCarrinho('${produto.id}')">Adicionar</button>
+    `;
+    lista.appendChild(div);
+  });
+}
+
+window.adicionarAoCarrinho = function(id) {
+  const produto = produtos.find(p => p.id === id);
+  if (!produto || produto.quantidade <= 0) {
+    alert("Produto sem estoque!");
+    return;
+  }
+
+  const existente = carrinho.find(item => item.id === id);
+
+  if (existente) {
+    if (existente.quantidade < produto.quantidade) {
+      existente.quantidade++;
+    } else {
+      alert("Limite de estoque atingido!");
+      return;
+    }
+  } else {
+    carrinho.push({ ...produto, quantidade: 1 });
+  }
+
+  renderizarCarrinho();
+  mostrarAba("carrinho");
+}
+
+// -------- RENDER CARRINHO --------
+function renderizarCarrinho() {
+  const div = document.getElementById("itens-carrinho");
+  const totalSpan = document.getElementById("total");
+  div.innerHTML = "";
+
+  let total = 0;
+
+  carrinho.forEach((item, i) => {
+    total += item.preco * item.quantidade;
+
+    div.innerHTML += `
+      <div class="produto">
+        ${item.nome} (${item.quantidade})<br>
+        R$ ${(item.preco * item.quantidade).toFixed(2)}<br>
+        <button onclick="removerItem(${i})">Remover</button>
+      </div>
+    `;
+  });
+
+  totalSpan.textContent = total.toFixed(2);
+}
+
+window.removerItem = function(index) {
+  carrinho.splice(index, 1);
+  renderizarCarrinho();
+}
+
+// -------- FINALIZAR COMPRA --------
+window.finalizarCompra = async function() {
+  if (carrinho.length === 0) {
+    alert("Carrinho vazio!");
+    return;
+  }
+
+  let mensagem = "Olá! Gostaria de fazer o pedido:\n";
+  let total = 0;
+
+  for (const item of carrinho) {
+    const subtotal = item.preco * item.quantidade;
+    total += subtotal;
+
+    mensagem += `- ${item.nome} (${item.quantidade}) - R$ ${subtotal.toFixed(2)}\n`;
+
+    // 🔥 Atualiza estoque no Firebase
+    const produtoRef = doc(db, "produtos", item.id);
+    await updateDoc(produtoRef, {
+      quantidade: item.quantidade <= item.quantidade 
+        ? item.quantidade >= 0 
+        : 0
+    });
+  }
+
+  mensagem += `\nTotal: R$ ${total.toFixed(2)}`;
+
+  const numeroWhatsApp = "5521976152436";
+  const mensagemURL = encodeURIComponent(mensagem);
+
+  window.open(`https://wa.me/${numeroWhatsApp}?text=${mensagemURL}`, "_blank");
+
+  carrinho = [];
+  renderizarCarrinho();
+  carregarProdutos();
+}
+
+carregarProdutos();
+
+</script>
+
 </body>
 </html>
